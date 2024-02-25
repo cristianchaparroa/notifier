@@ -5,3 +5,11 @@ type Notification struct {
 	Type      string
 	Recipient string
 }
+
+func NewNotification(content, typ, recipient string) *Notification {
+	return &Notification{
+		Content:   content,
+		Type:      typ,
+		Recipient: recipient,
+	}
+}
