@@ -1,0 +1,54 @@
+name: Peer Review
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.21
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.21
+        id: go
+
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: get dependencies
+        run: go mod tidy
+
+      - name: run test cases
+        run: go test --race -v ./... | { grep -v 'no test files'; true; }
+
+      - name: install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.52.0
+
+      - name: fetch repository changes
+        run: |
+          git fetch
+
+      - name: run golangci-lint
+        run: |
+          $(go env GOPATH)/bin/golangci-lint run  --config .github/configs/.golangci.yml --issues-exit-code=0 --out-format=json --new-from-rev=origin/main --timeout=3m > lint.json
+          jq '[.Issues[] | {path: .Pos.Filename, start_line: .Pos.Line, end_line: .Pos.Line, start_column: .Pos.Column, end_column: .Pos.Column , title: .FromLinter, message: .Text, raw_details: .Text, "annotation_level": "failure"}]' lint.json > ./annotations.json
+          cat ./annotations.json
+
+      - name: annotate
+        uses: yuzutech/annotations-action@v0.3.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          input: ./annotations.json
