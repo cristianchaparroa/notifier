@@ -9,7 +9,7 @@ import (
 func main() {
 	cfg, err := config.NewConfiguration()
 	if err != nil {
-		fmt.Println("Config error: %s", err)
+		fmt.Printf("Config error: %s\n", err)
 	}
 
 	service.Run(cfg)
