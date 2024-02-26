@@ -1,10 +1,9 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"notifier/internal/entity"
-	"sync"
-	"time"
 )
 
 // StatusHandler handles rate limits for the "status" notification type.
@@ -12,20 +11,19 @@ type StatusHandler struct {
 	*BaseHandler
 }
 
-func NewStatusHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m *sync.Mutex) *StatusHandler {
+func NewStatusHandler(cache RateLimitCache, r RateLimitRule) *StatusHandler {
 	return &StatusHandler{&BaseHandler{
-		MaxPerUnit:    r.MaxPerUnit,
-		Unit:          r.Unit,
-		lastSentTimes: lastSentTimes,
-		mutex:         m,
+		MaxPerUnit: r.MaxPerUnit,
+		Unit:       r.Unit,
+		cache:      cache,
 	}}
 }
 
-func (h *StatusHandler) Handle(n *entity.Notification) error {
+func (h *StatusHandler) Handle(ctx context.Context, n *entity.Notification) error {
 	if entity.StatusNotificationType != n.Type {
-		return h.Next.Handle(n) // Pass to Next handler
+		return h.Next.Handle(ctx, n) // Pass to Next handler
 	}
-	return h.Validate(n)
+	return h.Validate(ctx, n)
 }
 
 func (h *StatusHandler) SetNext(next NotificationRateLimitHandler) {
@@ -37,20 +35,19 @@ type MarketingHandler struct {
 	*BaseHandler
 }
 
-func NewMarketingHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m *sync.Mutex) *MarketingHandler {
+func NewMarketingHandler(cache RateLimitCache, r RateLimitRule) *MarketingHandler {
 	return &MarketingHandler{&BaseHandler{
-		MaxPerUnit:    r.MaxPerUnit,
-		Unit:          r.Unit,
-		lastSentTimes: lastSentTimes,
-		mutex:         m,
+		MaxPerUnit: r.MaxPerUnit,
+		Unit:       r.Unit,
+		cache:      cache,
 	}}
 }
 
-func (h *MarketingHandler) Handle(n *entity.Notification) error {
+func (h *MarketingHandler) Handle(ctx context.Context, n *entity.Notification) error {
 	if entity.MarketingNotificationType != n.Type {
-		return h.Next.Handle(n) // Pass to Next handler
+		return h.Next.Handle(ctx, n) // Pass to Next handler
 	}
-	return h.Validate(n)
+	return h.Validate(ctx, n)
 }
 
 func (h *MarketingHandler) SetNext(next NotificationRateLimitHandler) {
@@ -62,20 +59,19 @@ type NewsHandler struct {
 	*BaseHandler
 }
 
-func NewNewsHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m *sync.Mutex) *NewsHandler {
+func NewNewsHandler(cache RateLimitCache, r RateLimitRule) *NewsHandler {
 	return &NewsHandler{&BaseHandler{
-		MaxPerUnit:    r.MaxPerUnit,
-		Unit:          r.Unit,
-		lastSentTimes: lastSentTimes,
-		mutex:         m,
+		MaxPerUnit: r.MaxPerUnit,
+		Unit:       r.Unit,
+		cache:      cache,
 	}}
 }
 
-func (h *NewsHandler) Handle(n *entity.Notification) error {
+func (h *NewsHandler) Handle(ctx context.Context, n *entity.Notification) error {
 	if entity.NewsNotificationType != n.Type {
-		return h.Next.Handle(n) // Pass to Next handler
+		return h.Next.Handle(ctx, n) // Pass to Next handler
 	}
-	return h.Validate(n)
+	return h.Validate(ctx, n)
 }
 
 func (h *NewsHandler) SetNext(next NotificationRateLimitHandler) {
@@ -86,7 +82,7 @@ type UnknownHandler struct {
 	next NotificationRateLimitHandler
 }
 
-func (h *UnknownHandler) Handle(n *entity.Notification) error {
+func (h *UnknownHandler) Handle(ctx context.Context, n *entity.Notification) error {
 	return fmt.Errorf("notification rate limit unhandled for type %q: recipient %q", n.Type, n.Recipient)
 }
 

@@ -5,6 +5,7 @@ import (
 	"notifier/config"
 	v1 "notifier/internal/controller/http/v1"
 	"notifier/internal/usecase"
+	"notifier/internal/usecase/repo"
 	"notifier/pkg/httpserver"
 	"os"
 	"os/signal"
@@ -14,7 +15,8 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	nh := usecase.BuildRateLimitChain()
+	cache := repo.NewInMemoryCache()
+	nh := usecase.BuildRateLimitChain(cache)
 	em := usecase.NewEmailManager(cfg)
 	uc := usecase.NewNotificationUseCase(em, nh)
 	nc := v1.NewNotificationController(uc)
