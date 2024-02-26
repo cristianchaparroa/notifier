@@ -1,9 +1,9 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"notifier/internal/entity"
-	"sync"
 	"time"
 )
 
@@ -14,27 +14,32 @@ type RateLimitRule struct {
 
 // BaseHandler handles rate limits for the "any" notification type.
 type BaseHandler struct {
-	MaxPerUnit    int                          // Maximum number of notifications allowed per unit (e.g., 2)
-	Unit          time.Duration                // Unit of time for the rate limit (e.g., time.Minute)
-	lastSentTimes map[string]time.Time         // Maps recipient emails to the last time sent
-	mutex         *sync.Mutex                  // Protects lastSentTimes from concurrent access
-	Next          NotificationRateLimitHandler // Next handler in the chain
+	MaxPerUnit int                          // Maximum number of notifications allowed per unit (e.g., 2)
+	Unit       time.Duration                // Unit of time for the rate limit (e.g., time.Minute)
+	Next       NotificationRateLimitHandler // Next handler in the chain
+	cache      RateLimitCache
 }
 
-func (h *BaseHandler) Validate(notification *entity.Notification) error {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
+func (h *BaseHandler) Validate(ctx context.Context, notification *entity.Notification) error {
+	lastSentTime, getErr := h.cache.GetLastSentTime(ctx, notification.Recipient)
+	if getErr != nil {
+		return getErr
+	}
 
-	lastSentTime, ok := h.lastSentTimes[notification.Recipient]
-	if !ok || time.Since(lastSentTime) >= h.Unit {
-		h.lastSentTimes[notification.Recipient] = time.Now()
+	if time.Since(lastSentTime) >= h.Unit {
+		setErr := h.cache.SetLastSentTime(ctx, notification.Recipient, time.Now())
+		if setErr != nil {
+			fmt.Println(setErr)
+			return setErr
+		}
+
 		return nil
 	}
 
 	return fmt.Errorf("notification rate limit exceeded for type %q: recipient %q", notification.Type, notification.Recipient)
 }
 
-func BuildRateLimitChain() NotificationRateLimitHandler {
+func BuildRateLimitChain(cache RateLimitCache) NotificationRateLimitHandler {
 	// TODO: it could be stored on db to be configurable
 	rules := map[string]RateLimitRule{
 		entity.StatusNotificationType:    {MaxPerUnit: 2, Unit: time.Minute},
@@ -42,14 +47,9 @@ func BuildRateLimitChain() NotificationRateLimitHandler {
 		entity.MarketingNotificationType: {MaxPerUnit: 3, Unit: time.Hour},
 	}
 
-	// TODO: abstract the storage to be scalable
-	// 	i.e: Redis, Memcache...(ephemeral storage with high response)
-	lastSentTimes := make(map[string]time.Time)
-	m := &sync.Mutex{}
-
-	sh := NewStatusHandler(lastSentTimes, rules[entity.StatusNotificationType], m)
-	nh := NewNewsHandler(lastSentTimes, rules[entity.NewsNotificationType], m)
-	mh := NewMarketingHandler(lastSentTimes, rules[entity.MarketingNotificationType], m)
+	sh := NewStatusHandler(cache, rules[entity.StatusNotificationType])
+	nh := NewNewsHandler(cache, rules[entity.NewsNotificationType])
+	mh := NewMarketingHandler(cache, rules[entity.MarketingNotificationType])
 	uh := &UnknownHandler{}
 
 	sh.Next = nh

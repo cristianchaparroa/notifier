@@ -4,6 +4,7 @@ package usecase
 import (
 	"context"
 	"notifier/internal/entity"
+	"time"
 )
 
 // NotificationUseCase defines the logic that manages and sends out email notifications of various types.
@@ -21,6 +22,12 @@ type EmailManager interface {
 
 // NotificationRateLimitHandler defines the interface for a handler in the chain of responsibility.
 type NotificationRateLimitHandler interface {
-	Handle(n *entity.Notification) error
+	Handle(ctx context.Context, n *entity.Notification) error
 	SetNext(next NotificationRateLimitHandler)
+}
+
+// RateLimitCache defines an interface for storing and retrieving last sent times.
+type RateLimitCache interface {
+	GetLastSentTime(ctx context.Context, key string) (time.Time, error)
+	SetLastSentTime(ctx context.Context, key string, value time.Time) error
 }

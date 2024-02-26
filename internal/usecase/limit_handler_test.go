@@ -1,7 +1,9 @@
 package usecase
 
 import (
+	"context"
 	"notifier/internal/entity"
+	"notifier/internal/usecase/repo"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -21,7 +23,8 @@ func TestLimitHandlerSuite(t *testing.T) {
 }
 
 func (s *limitHandlerSuite) TestChainOfResponsibility() {
-	handler := BuildRateLimitChain()
+	memoryCache := repo.NewInMemoryCache()
+	handler := BuildRateLimitChain(memoryCache)
 
 	// Sending notifications (some will be rejected due to rate limits)
 	notifications := []notificationTest{
@@ -33,8 +36,9 @@ func (s *limitHandlerSuite) TestChainOfResponsibility() {
 		{entity.NewNotification("", "unknown", "user4@example.com"), false},                        // Not Allowed (no handler for "unknown")
 	}
 
+	ctx := context.Background()
 	for _, tc := range notifications {
-		err := handler.Handle(tc.n)
+		err := handler.Handle(ctx, tc.n)
 		if !tc.expectedAllowed {
 			s.NotNil(err)
 		}
