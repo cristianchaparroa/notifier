@@ -12,7 +12,7 @@ type StatusHandler struct {
 	*BaseHandler
 }
 
-func NewStatusHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m sync.Mutex) *StatusHandler {
+func NewStatusHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m *sync.Mutex) *StatusHandler {
 	return &StatusHandler{&BaseHandler{
 		MaxPerUnit:    r.MaxPerUnit,
 		Unit:          r.Unit,
@@ -23,13 +23,13 @@ func NewStatusHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m syn
 
 func (h *StatusHandler) Handle(n *entity.Notification) error {
 	if entity.StatusNotificationType != n.Type {
-		return h.next.Handle(n) // Pass to next handler
+		return h.Next.Handle(n) // Pass to Next handler
 	}
 	return h.Validate(n)
 }
 
 func (h *StatusHandler) SetNext(next NotificationRateLimitHandler) {
-	h.next = next
+	h.Next = next
 }
 
 // MarketingHandler handles rate limits for the "marketing" notification type.
@@ -37,7 +37,7 @@ type MarketingHandler struct {
 	*BaseHandler
 }
 
-func NewMarketingHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m sync.Mutex) *MarketingHandler {
+func NewMarketingHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m *sync.Mutex) *MarketingHandler {
 	return &MarketingHandler{&BaseHandler{
 		MaxPerUnit:    r.MaxPerUnit,
 		Unit:          r.Unit,
@@ -48,13 +48,13 @@ func NewMarketingHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m 
 
 func (h *MarketingHandler) Handle(n *entity.Notification) error {
 	if entity.MarketingNotificationType != n.Type {
-		return h.next.Handle(n) // Pass to next handler
+		return h.Next.Handle(n) // Pass to Next handler
 	}
 	return h.Validate(n)
 }
 
 func (h *MarketingHandler) SetNext(next NotificationRateLimitHandler) {
-	h.next = next
+	h.Next = next
 }
 
 // NewsHandler handles rate limits for the "news" notification type.
@@ -62,7 +62,7 @@ type NewsHandler struct {
 	*BaseHandler
 }
 
-func NewNewsHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m sync.Mutex) *NewsHandler {
+func NewNewsHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m *sync.Mutex) *NewsHandler {
 	return &NewsHandler{&BaseHandler{
 		MaxPerUnit:    r.MaxPerUnit,
 		Unit:          r.Unit,
@@ -73,13 +73,13 @@ func NewNewsHandler(lastSentTimes map[string]time.Time, r RateLimitRule, m sync.
 
 func (h *NewsHandler) Handle(n *entity.Notification) error {
 	if entity.NewsNotificationType != n.Type {
-		return h.next.Handle(n) // Pass to next handler
+		return h.Next.Handle(n) // Pass to Next handler
 	}
 	return h.Validate(n)
 }
 
 func (h *NewsHandler) SetNext(next NotificationRateLimitHandler) {
-	h.next = next
+	h.Next = next
 }
 
 type UnknownHandler struct {

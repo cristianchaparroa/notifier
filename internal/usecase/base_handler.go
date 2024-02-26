@@ -17,8 +17,8 @@ type BaseHandler struct {
 	MaxPerUnit    int                          // Maximum number of notifications allowed per unit (e.g., 2)
 	Unit          time.Duration                // Unit of time for the rate limit (e.g., time.Minute)
 	lastSentTimes map[string]time.Time         // Maps recipient emails to the last time sent
-	mutex         sync.Mutex                   // Protects lastSentTimes from concurrent access
-	next          NotificationRateLimitHandler // Next handler in the chain
+	mutex         *sync.Mutex                  // Protects lastSentTimes from concurrent access
+	Next          NotificationRateLimitHandler // Next handler in the chain
 }
 
 func (h *BaseHandler) Validate(notification *entity.Notification) error {
@@ -45,16 +45,16 @@ func BuildRateLimitChain() NotificationRateLimitHandler {
 	// TODO: abstract the storage to be scalable
 	// 	i.e: Redis, Memcache...(ephemeral storage with high response)
 	lastSentTimes := make(map[string]time.Time)
-	m := sync.Mutex{}
+	m := &sync.Mutex{}
 
 	sh := NewStatusHandler(lastSentTimes, rules[entity.StatusNotificationType], m)
 	nh := NewNewsHandler(lastSentTimes, rules[entity.NewsNotificationType], m)
 	mh := NewMarketingHandler(lastSentTimes, rules[entity.MarketingNotificationType], m)
 	uh := &UnknownHandler{}
 
-	sh.next = nh
-	nh.next = mh
-	mh.next = uh // the UnknownHandler should be the last one
+	sh.Next = nh
+	nh.Next = mh
+	mh.Next = uh // the UnknownHandler should be the last one
 
 	return sh
 }

@@ -1,3 +1,4 @@
+// Package usecase defines the service business logic
 package usecase
 
 import (
