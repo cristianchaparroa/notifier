@@ -28,6 +28,7 @@ func (uc *notificationUseCase) Notify(ctx context.Context, n *entity.Notificatio
 
 	sendErr := uc.notifier.Send("Automatic email", n.Recipient, n.Content)
 	if sendErr != nil {
+		fmt.Printf("send notification error:%v \n", handleErr)
 		return sendErr
 	}
 

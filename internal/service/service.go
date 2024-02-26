@@ -15,7 +15,7 @@ import (
 
 func Run(cfg *config.Config) {
 	nh := usecase.BuildRateLimitChain()
-	em := usecase.NewEmailManager()
+	em := usecase.NewEmailManager(cfg)
 	uc := usecase.NewNotificationUseCase(em, nh)
 	nc := v1.NewNotificationController(uc)
 
