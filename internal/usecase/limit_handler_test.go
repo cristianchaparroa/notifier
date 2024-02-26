@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"fmt"
 	"notifier/internal/entity"
 	"testing"
 
@@ -36,12 +35,10 @@ func (s *limitHandlerSuite) TestChainOfResponsibility() {
 		{entity.NewNotification("", "unknown", "user4@example.com"), false},                        // Not Allowed (no handler for "unknown")
 	}
 
-	for i, tc := range notifications {
-		s.T().Run(fmt.Sprintf("notification-%d", i), func(t *testing.T) {
-			err := handler.Handle(tc.n)
-			if !tc.expectedAllowed {
-				s.NotNil(err)
-			}
-		})
+	for _, tc := range notifications {
+		err := handler.Handle(tc.n)
+		if !tc.expectedAllowed {
+			s.NotNil(err)
+		}
 	}
 }
