@@ -1,5 +1,7 @@
 package usecase
 
+import "fmt"
+
 type emailManager struct {
 }
 
@@ -8,5 +10,6 @@ func NewEmailManager() EmailManager {
 }
 
 func (m *emailManager) Send(subject, addressee, body string) error {
-	panic("implement me")
+	fmt.Printf("--> Mock Email Manager - subject %s, Receipent:%s, content:%s\n", subject, addressee, body)
+	return nil
 }

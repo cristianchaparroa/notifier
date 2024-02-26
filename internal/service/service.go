@@ -14,12 +14,15 @@ import (
 )
 
 func Run(cfg *config.Config) {
+	nh := usecase.BuildRateLimitChain()
 	em := usecase.NewEmailManager()
-	uc := usecase.NewNotificationUseCase(em)
+	uc := usecase.NewNotificationUseCase(em, nh)
 	nc := v1.NewNotificationController(uc)
 
 	e := echo.New()
 	e.POST("/notifications", nc.SendNotifications)
+
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", cfg.App.Port)))
 
 	httpServer := httpserver.New(e)
 	interrupt := make(chan os.Signal, 1)

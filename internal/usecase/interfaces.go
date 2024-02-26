@@ -17,3 +17,9 @@ type EmailManager interface {
 	// body is the message content
 	Send(subject, addressee, body string) error
 }
+
+// NotificationRateLimitHandler defines the interface for a handler in the chain of responsibility.
+type NotificationRateLimitHandler interface {
+	Handle(n *entity.Notification) error
+	SetNext(next NotificationRateLimitHandler)
+}
