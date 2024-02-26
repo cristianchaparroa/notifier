@@ -1,10 +1,10 @@
 package usecase
 
 import (
-	"crypto/tls"
 	"fmt"
-	"gopkg.in/gomail.v2"
 	"notifier/config"
+
+	"gopkg.in/gomail.v2"
 )
 
 type noopManager struct{}
@@ -37,7 +37,7 @@ func (m *emailManager) Send(subject, addressee, body string) error {
 	message.SetBody("text", body)
 
 	d := gomail.NewDialer(m.cfg.SMTP.Server, m.cfg.SMTP.Port, m.cfg.SMTP.User, m.cfg.SMTP.Password)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	//d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	if err := d.DialAndSend(message); err != nil {
 		return err
 	}
