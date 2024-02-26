@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
 	"notifier/internal/entity"
 )
@@ -21,6 +22,7 @@ func NewNotificationUseCase(notifier EmailManager, h NotificationRateLimitHandle
 func (uc *notificationUseCase) Notify(ctx context.Context, n *entity.Notification) error {
 	handleErr := uc.rateLimitHandler.Handle(n)
 	if handleErr != nil {
+		fmt.Printf("rate limit error:%v \n", handleErr)
 		return handleErr
 	}
 
