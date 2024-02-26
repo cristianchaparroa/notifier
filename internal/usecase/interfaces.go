@@ -1,3 +1,4 @@
+// Package usecase defines the service business logic
 package usecase
 
 import (
@@ -16,4 +17,10 @@ type EmailManager interface {
 	// addressee is the email receiver
 	// body is the message content
 	Send(subject, addressee, body string) error
+}
+
+// NotificationRateLimitHandler defines the interface for a handler in the chain of responsibility.
+type NotificationRateLimitHandler interface {
+	Handle(n *entity.Notification) error
+	SetNext(next NotificationRateLimitHandler)
 }
