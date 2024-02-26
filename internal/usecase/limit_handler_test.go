@@ -16,13 +16,13 @@ type limitHandlerSuite struct {
 	suite.Suite
 }
 
-func (s *limitHandlerSuite) setupTest() {}
+func (s limitHandlerSuite) setupTest() {}
 
 func TestLimitHandlerSuite(t *testing.T) {
 	suite.Run(t, new(limitHandlerSuite))
 }
 
-func (s *limitHandlerSuite) TestChainOfResponsibility() {
+func (s limitHandlerSuite) TestChainOfResponsibility() {
 	handler := BuildRateLimitChain()
 
 	// Sending notifications (some will be rejected due to rate limits)
