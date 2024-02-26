@@ -1,3 +1,4 @@
+// Package repo  is an abstract storage (database) or external microservices that business logic works with
 package repo
 
 import (

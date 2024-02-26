@@ -27,7 +27,12 @@ func (h *BaseHandler) Validate(ctx context.Context, notification *entity.Notific
 	}
 
 	if time.Since(lastSentTime) >= h.Unit {
-		h.cache.SetLastSentTime(ctx, notification.Recipient, time.Now())
+		setErr := h.cache.SetLastSentTime(ctx, notification.Recipient, time.Now())
+		if setErr != nil {
+			fmt.Println(setErr)
+			return setErr
+		}
+
 		return nil
 	}
 
