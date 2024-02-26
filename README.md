@@ -35,3 +35,9 @@ Responses
 | 201  | notification sent                                                 | 
 | 400  | Bad request. The body request is not parseable                    | 
 | 503  | The notification has been limited according to the business rules | 
+
+
+## Design
+The following diagram shows the system design
+
+![title](images/notifier-schema.png)
